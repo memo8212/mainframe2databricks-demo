@@ -1,0 +1,23 @@
+# VSAM cluster definition + record layout
+# ---------------------------------------------------------------------------
+# DEFINE CLUSTER (NAME(PROD.VSAM.ACCTMAST) -
+#     INDEXED -                 KSDS = key-sequenced
+#     KEYS(10 0) -              primary key: 10 bytes at offset 0 (ACCT-NO)
+#     RECORDSIZE(57 57) -       fixed record length
+#     SHAREOPTIONS(2 3))
+#   DATA (NAME(PROD.VSAM.ACCTMAST.DATA))
+#   INDEX(NAME(PROD.VSAM.ACCTMAST.INDEX))
+#
+# Record layout comes from copybook ACCTREC.cpy (57 bytes):
+#   offset  len  field          PIC
+#   0       10   ACCT-NO        X(10)
+#   10      30   ACCT-NAME      X(30)
+#   40       2   ACCT-TYPE      X(02)
+#   42      13   ACCT-BALANCE   S9(11)V99 COMP-3
+#   55       1   ACCT-STATUS    X(01)
+#   56       1   ... (ACCT-LAST-DATE 9(08) shown as 8-digit display)
+#
+# Migration note:
+#   KSDS (keyed)      -> Delta table with a business key + MERGE upsert
+#   random READ/REWRITE -> point lookup / MERGE on ACCT_NO
+#   sequential browse  -> ORDER BY / range scan

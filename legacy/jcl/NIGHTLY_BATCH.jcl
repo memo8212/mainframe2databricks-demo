@@ -1,0 +1,29 @@
+//NIGHTLY  JOB (ACCT),'NIGHTLY ACCOUNT POSTING',CLASS=A,MSGCLASS=X,
+//             NOTIFY=&SYSUID
+//* ------------------------------------------------------------------
+//* Nightly batch: sort transactions, post to account master, backup
+//* the VSAM file, then produce the end-of-night report.
+//* ------------------------------------------------------------------
+//STEP010  EXEC PGM=SORT
+//SYSOUT   DD SYSOUT=*
+//SORTIN   DD DSN=PROD.TRANS.DAILY,DISP=SHR
+//SORTOUT  DD DSN=PROD.TRANS.SORTED,DISP=(NEW,CATLG,DELETE),
+//             SPACE=(CYL,(10,5))
+//SYSIN    DD *
+  SORT FIELDS=(1,10,CH,A)
+/*
+//STEP020  EXEC PGM=ACCTPOST,COND=(0,NE,STEP010)
+//TRANS    DD DSN=PROD.TRANS.SORTED,DISP=SHR
+//ACCTMAST DD DSN=PROD.VSAM.ACCTMAST,DISP=SHR
+//SYSOUT   DD SYSOUT=*
+//STEP030  EXEC PGM=IDCAMS,COND=(0,NE,STEP020)
+//SYSOUT   DD SYSOUT=*
+//SYSIN    DD *
+  REPRO INFILE(ACCTMAST) OUTFILE(BACKUP)
+/*
+//STEP040  EXEC PGM=ACCTRPT,COND=(0,NE,STEP020)
+//ACCTMAST DD DSN=PROD.VSAM.ACCTMAST,DISP=SHR
+//ACCTRPT  DD DSN=PROD.REPORTS.ACCTRPT,DISP=(NEW,CATLG,DELETE),
+//             SPACE=(CYL,(2,2))
+//SYSOUT   DD SYSOUT=*
+//
