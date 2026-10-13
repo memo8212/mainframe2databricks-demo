@@ -1,0 +1,65 @@
+{
+  "name": "NIGHTLY_CLAIMS_ADJUDICATION",
+  "job_cluster": {
+    "job_cluster_key": "claims_cluster",
+    "new_cluster": {
+      "spark_version": "15.4.x-scala2.12",
+      "node_type_id": "i3.xlarge",
+      "num_workers": 2
+    }
+  },
+  "tasks": [
+    {
+      "task_key": "sort_claims",
+      "description": "STEP010 EXEC PGM=SORT -> orderBy(CLAIM_ID)",
+      "job_cluster_key": "claims_cluster",
+      "notebook_task": {
+        "notebook_path": "/Users/memo/mainframe/claims/sort_claims",
+        "source": "WORKSPACE"
+      },
+      "depends_on": []
+    },
+    {
+      "task_key": "adjudicate_claims",
+      "description": "STEP020 EXEC PGM=CLAIMADJ -> coverage + deductible + coinsurance",
+      "job_cluster_key": "claims_cluster",
+      "notebook_task": {
+        "notebook_path": "/Users/memo/mainframe/claims/adjudicate_claims",
+        "source": "WORKSPACE"
+      },
+      "depends_on": [
+        {
+          "task_key": "sort_claims"
+        }
+      ]
+    },
+    {
+      "task_key": "claims_report",
+      "description": "STEP030 EXEC PGM=CLAIMRPT -> paid totals + denial rate -> Gold",
+      "job_cluster_key": "claims_cluster",
+      "notebook_task": {
+        "notebook_path": "/Users/memo/mainframe/claims/claims_report",
+        "source": "WORKSPACE"
+      },
+      "depends_on": [
+        {
+          "task_key": "adjudicate_claims"
+        }
+      ]
+    }
+  ],
+  "parameters": [
+    {
+      "name": "JOB_NAME",
+      "default": "CLAIMJOB"
+    },
+    {
+      "name": "PLAN_YEAR",
+      "default": "2024"
+    }
+  ],
+  "tags": {
+    "usecase": "claims",
+    "poc": "mainframe-to-databricks"
+  }
+}

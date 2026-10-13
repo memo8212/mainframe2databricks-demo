@@ -1,0 +1,67 @@
+# The JCL NIGHTLY_BATCH job stream, expressed as a Databricks Workflow.
+# STEP010 SORT -> STEP020 ACCTPOST -> STEP030 IDCAMS -> STEP040 ACCTRPT,
+# plus a reconcile task (the migrated ACCTRPT/validation step).
+resources:
+  jobs:
+    nightly_account_posting:
+      name: NIGHTLY_ACCOUNT_POSTING
+      tags:
+        project: mainframe2databricks-poc
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: schema
+          default: ${var.schema}
+      job_clusters:
+        - job_cluster_key: mf_cluster
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            node_type_id: Standard_DS3_v2
+            num_workers: 0
+            spark_conf:
+              spark.master: "local[*]"
+              spark.databricks.cluster.profile: singleNode
+            custom_tags:
+              ResourceClass: SingleNode
+      tasks:
+        # STEP010 SORT + STEP020 ACCTPOST (ingest + post)
+        - task_key: post_transactions
+          job_cluster_key: mf_cluster
+          notebook_task:
+            notebook_path: ../notebooks/02_post_transactions.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+        # STEP030 IDCAMS REPRO -> Delta backup
+        - task_key: backup_vsam
+          job_cluster_key: mf_cluster
+          depends_on:
+            - task_key: post_transactions
+          notebook_task:
+            notebook_path: ../notebooks/03_backup_vsam.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+        # STEP040 ACCTRPT -> Gold report
+        - task_key: build_report
+          job_cluster_key: mf_cluster
+          depends_on:
+            - task_key: post_transactions
+          notebook_task:
+            notebook_path: ../notebooks/04_report.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+        # validation: legacy vs Databricks
+        - task_key: reconcile
+          job_cluster_key: mf_cluster
+          depends_on:
+            - task_key: build_report
+          notebook_task:
+            notebook_path: ../notebooks/05_reconcile.py
+            base_parameters:
+              catalog: ${var.catalog}
+              schema: ${var.schema}
+      # schedule:
+      #   quartz_cron_expression: "0 0 1 * * ?"
+      #   timezone_id: UTC

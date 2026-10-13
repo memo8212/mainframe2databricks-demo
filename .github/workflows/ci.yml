@@ -26,13 +26,23 @@ jobs:
           pip install -r requirements.txt
 
       - name: Generate synthetic mainframe extracts
-        run: python data/generate_mainframe_data.py
+        run: |
+          python data/generate_mainframe_data.py
+          python usecase-claims/data/generate_claims_data.py
 
       - name: Run converter (legacy -> Databricks artifacts)
-        run: python converter/mf2dbx_converter.py
+        run: |
+          python converter/mf2dbx_converter.py
+          python usecase-claims/converter/convert_claims.py
+
+      - name: EBCDIC / COMP-3 round-trip
+        run: python runner/ebcdic_comp3_demo.py
 
       - name: Run end-to-end demo + validation
         run: python runner/run_demo.py
+
+      - name: Run claims use case + validation
+        run: python usecase-claims/runner/run_claims.py
 
       - name: Show conversion report
         run: cat artifacts/generated/conversion_report.md

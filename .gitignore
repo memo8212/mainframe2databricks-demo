@@ -12,8 +12,10 @@ derby.log
 
 # Generated outputs (regenerate with the converter/runner)
 artifacts/output/
+usecase-claims/artifacts/output/
 artifacts/*.zip
 data/*.csv
+usecase-claims/data/*.csv
 
 # Editors / OS
 .DS_Store

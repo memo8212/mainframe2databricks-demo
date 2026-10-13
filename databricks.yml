@@ -1,0 +1,35 @@
+# Databricks Asset Bundle (DAB) — mainframe migration POC.
+# Deploy with:
+#   databricks bundle validate -t dev
+#   databricks bundle deploy   -t dev
+#   databricks bundle run nightly_account_posting -t dev
+bundle:
+  name: mainframe2databricks-poc
+
+variables:
+  catalog:
+    description: Unity Catalog catalog for the migrated tables
+    default: mf_poc
+  schema:
+    description: Schema for the migrated tables
+    default: accounting
+
+workspace:
+  host: ${DATABRICKS_HOST}
+  root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+
+include:
+  - resources/*.yml
+
+targets:
+  dev:
+    default: true
+    mode: development
+    workspace:
+      host: ${DATABRICKS_HOST}
+  prod:
+    mode: production
+    workspace:
+      host: ${DATABRICKS_HOST_PROD}
+    run_as:
+      service_principal_name: ${DATABRICKS_SP_NAME}
