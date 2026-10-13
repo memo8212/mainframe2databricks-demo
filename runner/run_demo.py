@@ -15,7 +15,6 @@ Run:  python runner/run_demo.py     (needs pyspark pyarrow pandas)
 """
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 
 import pandas as pd

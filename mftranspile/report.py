@@ -1,7 +1,6 @@
 """Translation report (markdown)."""
 from __future__ import annotations
 
-from pathlib import Path
 
 from mftranspile.translate import TranslationResult
 
