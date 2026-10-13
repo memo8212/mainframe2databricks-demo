@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mftranspile"
+version = "0.1.0"
+description = "COBOL -> PySpark conversion app (mainframe batch programs to Databricks)"
+requires-python = ">=3.9"
+dependencies = ["pyspark>=3.5"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.4", "pandas>=2.0", "pyarrow>=14"]
+
+[project.scripts]
+mftranspile = "mftranspile.cli:main"
+
+[tool.setuptools]
+packages = ["mftranspile"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

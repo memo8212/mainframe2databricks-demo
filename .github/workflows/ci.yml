@@ -44,5 +44,20 @@ jobs:
       - name: Run claims use case + validation
         run: python usecase-claims/runner/run_claims.py
 
+      - name: mftranspile tests
+        run: pytest -q tests/test_mftranspile.py
+
+      - name: Convert COBOL -> PySpark and verify
+        run: |
+          python -m mftranspile convert \
+            --cobol legacy/cobol/ACCTPOST.cbl \
+            --copybook ACCTREC=legacy/copybook/ACCTREC.cpy \
+            --jcl legacy/jcl/NIGHTLY_BATCH.jcl \
+            --out build/
+          python -m mftranspile verify \
+            --module build/post_transactions.py \
+            --data data \
+            --legacy artifacts/output/legacy/account_master.csv
+
       - name: Show conversion report
         run: cat artifacts/generated/conversion_report.md

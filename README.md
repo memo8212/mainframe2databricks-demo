@@ -109,6 +109,33 @@ databricks bundle run nightly_account_posting -t dev
 - `resources/uc_setup.sql` — Unity Catalog catalog/schemas/volume/tables
 - `notebooks/01..05` — ingest → post → backup → report → reconcile
 
+## Conversion app — `mftranspile` (COBOL → PySpark)
+
+`mftranspile/` is a real conversion **application**: it parses COBOL + COPYBOOK +
+JCL and **generates runnable PySpark**, a workflow, and a translation report —
+then **verifies** the generated code against the legacy result.
+
+```bash
+python -m mftranspile convert \
+  --cobol legacy/cobol/ACCTPOST.cbl \
+  --copybook ACCTREC=legacy/copybook/ACCTREC.cpy \
+  --jcl legacy/jcl/NIGHTLY_BATCH.jcl \
+  --out build/
+
+# ... produce the legacy result (python runner/run_demo.py) then:
+python -m mftranspile verify \
+  --module build/post_transactions.py --data data \
+  --legacy artifacts/output/legacy/account_master.csv
+# -> verify: PASS   max_balance_diff=0.0
+```
+
+It recognizes the sequential-master-update archetype (file defs, key move,
+`IF ADD/SUBTRACT`, `READ…REWRITE`, overdraft `IF`, `COMPUTE` interest, packed
+decimals → integer cents), labels each mapping **AUTO / PATTERN / REVIEW**, and
+surfaces anything it can't translate instead of silently dropping it.
+
+Full details: **`docs/mftranspile.md`**. Tests: `pytest -q tests/test_mftranspile.py`.
+
 ## Second use case — health claims adjudication
 
 `usecase-claims/` migrates an independent application (nightly claims

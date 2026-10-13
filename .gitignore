@@ -17,6 +17,11 @@ artifacts/*.zip
 data/*.csv
 usecase-claims/data/*.csv
 
+# mftranspile build output + packaging
+build/
+*.egg-info/
+verify_bridge/
+
 # Editors / OS
 .DS_Store
 .idea/
